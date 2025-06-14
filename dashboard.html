@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <!-- External Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(0,0,0,0.25);
+            z-index: 120;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal-content {
+            background: #fff;
+            padding: 1.5em 1.2em;
+            border-radius: 18px;
+            max-width: 95vw;
+            width: 420px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.12);
+        }
+        
+        .modal h3 {
+            margin-top: 0;
+        }
+        
+        /* Form Styles */
+        .form-input {
+            width: 100%;
+            padding: 0.6em;
+            margin-bottom: 0.7em;
+            box-sizing: border-box;
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 0.7em;
+            justify-content: flex-end;
+            margin-top: 1em;
+        }
+        
+        .btn {
+            padding: 0.7em 1.2em;
+            border: none;
+            border-radius: 7px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+        
+        .btn-primary {
+            background: #256427;
+            color: #fff;
+        }
+        
+        .btn-secondary {
+            background: #eee;
+        }
+        
+        /* Statistics Popup */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .popup-content {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 300px;
+            width: 90%;
+        }
+        
+        .popup-content h3 {
+            margin-top: 0;
+            color: #2563eb;
+        }
+        
+        .popup-content button {
+            margin-top: 15px;
+            padding: 8px 20px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        /* Popup Styles */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .popup-content {
+            background: white;
+            padding: 25px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 300px;
+            width: 90%;
+        }
+        
+        .popup-content h3 {
+            margin-top: 0;
+            color: #2563eb;
+        }
+        
+        .popup-content button {
+            margin-top: 15px;
+            padding: 8px 20px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        /* FAB Button */
+        #fab-add-receipt {
+            position: fixed;
+            bottom: 80px;
+            right: 22px;
+            background: #256427;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 58px;
+            height: 58px;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.3em;
+            z-index: 120;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="dashboard-bg">
+    <div class="dashboard-container">
+        <div class="dashboard-greeting" id="dashboard-greeting">Hi!</div>
+        
+        <div class="dashboard-cards">
+            <div class="stat-card">
+                <span class="stat-value">Coming Soon</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">Coming Soon</span>
+            </div>
+        </div>
+        
+        <div class="dashboard-actions">
+            <button class="action-btn" onclick="showComingSoon('Add Receipt')">
+                <span class="material-icons">add_circle</span> Add Receipt
+            </button>
+            <button class="action-btn" onclick="showComingSoon('Statistics')">
+                <span class="material-icons">bar_chart</span> Statistics
+            </button>
+            <button class="action-btn" onclick="showComingSoon('Track Budget')">
+                <span class="material-icons">track_changes</span> Track Budget
+            </button>
+            <a href="profile.html" class="action-btn"><span class="material-icons">person</span> Profile</a>
+        </div>
+        
+        <div class="recent-section">
+            <div class="section-header">
+                <h3>Recent Receipts</h3>
+            </div>
+            <div class="receipt-list" id="receipt-list">
+                <div class="receipt-loading">Loading receipts...</div>
+            </div>
+        </div>
+        
+        <div id="receipts-info-section">
+            <div id="receipts-status"></div>
+            <button id="open-receipts-modal-btn" class="btn btn-secondary">View Receipts</button>
+        </div>
+        
+        <!-- Receipts Modal -->
+        <div id="receipts-modal" class="modal">
+            <div class="modal-content">
+                <h3>Receipts Table</h3>
+                <div class="table-container">
+                    <table id="receipts-table">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Product Name</th>
+                                <th>Amount Paid</th>
+                                <th>Amount Remaining</th>
+                                <th>Warranty</th>
+                                <th>Return Period</th>
+                                <th>Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="receipts-tbody">
+                            <!-- Filled by JS -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="form-actions">
+                    <button id="close-receipts-modal-btn" class="btn btn-secondary">Close</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Add Receipt Modal -->
+        <div id="receipt-modal" class="modal">
+            <div class="modal-content">
+                <h3>Add Receipt</h3>
+                <form id="add-receipt-form">
+                    <input type="file" class="form-input" accept="image/*,application/pdf" capture="environment" id="receipt-file" required>
+                    <input type="text" class="form-input" id="receipt-title" placeholder="Title" required>
+                    <input type="number" class="form-input" id="receipt-amount" placeholder="Amount" required>
+                    <input type="number" class="form-input" id="receipt-warranty" placeholder="Warranty (months)">
+                    <div class="form-actions">
+                        <button type="button" id="cancel-receipt" class="btn btn-secondary">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-item active">
+            <span class="material-icons">home</span>
+            <span>Home</span>
+        </a>
+        <a href="receipts.html" class="nav-item">
+            <span class="material-icons">receipt_long</span>
+            <span>Receipts</span>
+        </a>
+        <a href="#" class="nav-item">
+            <span class="material-icons">star</span>
+            <span>Offers</span>
+        </a>
+        <a href="profile.html" class="nav-item" id="profile-nav-item">
+            <span class="material-icons">person</span>
+            <span id="profile-nav-name">Profile</span>
+        </a>
+    </nav>
+    
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="modal">
+        <div class="modal-content" style="max-height: 80vh; overflow-y: auto;">
+            <div class="modal-header">
+                <h3>My Profile</h3>
+                <button id="close-profile-modal" class="close-btn">&times;</button>
+            </div>
+            <div id="profile-modal-content">
+                <div class="loading-state">
+                    <div class="loader"></div>
+                    <p>Loading profile...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- FAB Button -->
+    <button id="fab-add-receipt">
+        <span class="material-icons">add</span>
+    </button>
+    
+    <!-- Coming Soon Popup -->
+    <div id="popupOverlay" class="popup-overlay">
+        <div class="popup-content">
+            <h3>Coming Soon!</h3>
+            <p id="popupMessage">This feature is coming soon.</p>
+            <button onclick="hidePopup()">Got it</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        function showComingSoon(feature) {
+            document.getElementById('popupMessage').textContent = `${feature} feature is coming soon!`;
+            document.getElementById('popupOverlay').style.display = 'flex';
+        }
+        
+        function hidePopup() {
+            document.getElementById('popupOverlay').style.display = 'none';
+        }
+        
+        // Close popup when clicking outside
+        document.getElementById('popupOverlay').addEventListener('click', function(e) {
+            if (e.target === this) hidePopup();
+        });
+    </script>
+    <script src="dashboard.js"></script>
+</body>
+</html>

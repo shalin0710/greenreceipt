@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Receipts</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+    <style>
+        :root {
+            --primary-color: #4F46E5;
+            --text-primary: #1F2937;
+            --text-secondary: #6B7280;
+            --bg-color: #F9FAFB;
+            --card-bg: #FFFFFF;
+            --border-color: #E5E7EB;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            padding: 0;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a1a;
+        }
+        .add-receipt-btn {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        .receipts-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            overflow: hidden;
+        }
+        .receipts-header {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr 1fr 1fr 1fr;
+            background-color: #f8fafc;
+            padding: 16px 20px;
+            font-weight: 600;
+            color: #64748b;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .receipt-item {
+            display: grid;
+            grid-template-columns: 1fr 1fr 2fr 1fr 1fr 1fr;
+            padding: 16px 20px;
+            align-items: center;
+            border-bottom: 1px solid #f1f5f9;
+            transition: background-color 0.2s;
+        }
+        .receipt-item:hover {
+            background-color: #f8fafc;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            text-align: center;
+        }
+        .status-paid {
+            background-color: #dcfce7;
+            color: #166534;
+        }
+        .status-pending {
+            background-color: #fef9c3;
+            color: #854d0e;
+        }
+        .action-btn {
+            background: none;
+            border: none;
+            color: #2563eb;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 14px;
+        }
+        .action-btn:hover {
+            text-decoration: underline;
+        }
+        .empty-state {
+            padding: 40px 20px;
+            text-align: center;
+            color: #64748b;
+        }
+        @media (max-width: 768px) {
+            .receipts-header, .receipt-item {
+                grid-template-columns: 1fr 1fr 1fr;
+            }
+            .mobile-hide {
+                display: none;
+            }
+        }
+        .receipt-card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .receipt-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+        .receipt-title {
+            font-weight: 600;
+            font-size: 16px;
+            color: #1a1a1a;
+        }
+        .receipt-amount {
+            font-weight: 600;
+            color: #2563eb;
+        }
+        .receipt-details {
+            display: flex;
+            gap: 16px;
+            margin-top: 8px;
+            font-size: 14px;
+            color: #666;
+        }
+        .receipt-actions {
+            margin-top: 12px;
+            display: flex;
+            gap: 12px;
+        }
+        .pdf-link {
+            color: #2563eb;
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #888;
+        }
+    </style>
+</head>
+<body class="dashboard-bg">
+    <div class="dashboard-container" style="padding-bottom: 80px;">
+        <div class="dashboard-greeting" id="dashboard-greeting">My Receipts</div>
+        
+        <div id="receipts-list" class="receipt-list">
+            <div class="loading">Loading receipts...</div>
+        </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-item"><span class="material-icons">home</span><span>Home</span></a>
+        <a href="receipts.html" class="nav-item active"><span class="material-icons">receipt_long</span><span>Receipts</span></a>
+        <a href="#" class="nav-item"><span class="material-icons">star</span><span>Offers</span></a>
+        <a href="profile.html" class="nav-item"><span class="material-icons">person</span><span>Profile</span></a>
+        <a href="#" class="nav-item"><span class="material-icons">more_horiz</span><span>More</span></a>
+    </nav>
+
+    <!-- Add Receipt FAB -->
+    <button id="fab-add-receipt" style="position:fixed;bottom:80px;right:22px;background:#256427;color:#fff;border:none;border-radius:50%;width:58px;height:58px;box-shadow:0 4px 14px rgba(0,0,0,0.18);display:flex;align-items:center;justify-content:center;font-size:2.3em;z-index:120;cursor:pointer;">
+        <span class="material-icons">add</span>
+    </button>
+
+    <!-- Supabase JS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script>
+        const SUPABASE_URL = 'https://ygfjhicakkcctduoscdy.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnZmpoaWNha2tjY3RkdW9zY2R5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MDgzMDQsImV4cCI6MjA2MDQ4NDMwNH0.pjDlkmoNMpJGxf7viom2hNgWTVEUUz7yYWgMUAaCx8c';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function loadReceipts() {
+            const receiptListEl = document.getElementById('receipts-list');
+            receiptListEl.innerHTML = `
+                <div style="text-align: center; padding: 40px 0;">
+                    <div class="loader" style="border: 4px solid #f3f3f3; border-top: 4px solid #2563eb; border-radius: 50%; width: 30px; height: 30px; animation: spin 1s linear infinite; margin: 0 auto 15px;"></div>
+                    <p>Loading your receipts...</p>
+                </div>`;
+                
+            // Add spinner animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }`;
+            document.head.appendChild(style);
+
+            try {
+                console.log('Attempting to get current user...');
+                const { data: { user }, error: userError } = await supabase.auth.getUser();
+                
+                if (userError) {
+                    console.error('Error getting user:', userError);
+                    throw userError;
+                }
+                
+                if (!user) {
+                    console.log('No user found, showing login message');
+                    receiptListEl.innerHTML = '<div class="empty-state">Please log in to view receipts.</div>';
+                    return;
+                }
+                
+                console.log('User found:', user);
+
+
+                // First, get the user's profile with phone and username
+                console.log('Fetching user profile...');
+                const { data: profile, error: profileError } = await supabase
+                    .from('profiles')
+                    .select('username, phone')
+                    .eq('id', user.id)
+                    .single();
+
+                if (profileError || !profile) {
+                    console.error('Error fetching profile:', profileError);
+                    receiptListEl.innerHTML = '<div class="empty-state">Error loading profile. Please try again.</div>';
+                    return [];
+                }
+
+                console.log('Profile found:', { username: profile.username, phone: profile.phone });
+
+                // Get phone number from profile
+                const phone = profile.phone;
+                if (!phone) {
+                    receiptListEl.innerHTML = '<div class="empty-state">No phone number found in profile.</div>';
+                    return;
+                }
+
+                console.log('Finding customer by phone:', phone);
+                let receipts = [];
+                let receiptsError = null;
+
+                try {
+                    // Fetch receipts for the current user
+                    console.log('Fetching receipt data...');
+                    const { data: receiptsData, error: receiptsError } = await supabase
+                        .from('receipts')
+                        .select('*')
+                        .eq('customer_name', profile.username)  // Match by customer name
+                        .order('date', { ascending: false });
+
+                    if (receiptsError) {
+                        console.error('Error fetching receipts:', receiptsError);
+                        throw receiptsError;
+                    }
+
+                    // If no receipts found, show empty state
+                    if (!receiptsData || receiptsData.length === 0) {
+                        receiptListEl.innerHTML = `
+                            <div class="empty-state">
+                                <p>Welcome, ${profile?.username || 'Customer'}</p>
+                                <p style="font-size: 14px; margin-top: 8px;">No receipts found for your account.</p>
+                            </div>`;
+                        return;
+                    }
+
+                    receipts = receiptsData || [];
+                    console.log(`Found ${receipts.length} receipts for ${profile.username}`);
+                } catch (err) {
+                    console.error('Error in receipt loading process:', err);
+                    receiptsError = err;
+                }
+
+                console.log('Receipts query completed. Found:', receipts?.length || 0, 'receipts');
+                console.log('Receipts data:', receipts);
+
+                if (receiptsError) {
+                    console.error('Error fetching receipts:', receiptsError);
+                    throw receiptsError;
+                }
+
+                console.log('Found', receipts?.length || 0, 'receipts matching profile');
+                
+                if (receiptsError) {
+                    console.error('Error fetching receipts:', receiptsError);
+                    receiptListEl.innerHTML = `
+                        <div class="empty-state">
+                            <p>Error loading receipts</p>
+                            <p style="font-size: 14px; margin-top: 8px;">${receiptsError.message || 'Please try again later'}</p>
+                        </div>`;
+                    return;
+                }
+
+                if (!receipts || receipts.length === 0) {
+                    receiptListEl.innerHTML = `
+                        <div class="container">
+                            <div class="header">
+                                <h1>My Receipts</h1>
+                            </div>
+                            <div class="receipts-grid" id="receipts-container">
+                                <div class="empty-state">
+                                    <p>No receipts found</p>
+                                    <p style="font-size: 14px; margin-top: 8px;">Add your first receipt to get started</p>
+                                </div>
+                            </div>
+                        </div>`;
+                    return;
+                }
+
+                let receiptsContainer = document.getElementById('receipts-container');
+                if (!receiptsContainer) {
+                    receiptsContainer = document.createElement('div');
+                    receiptsContainer.className = 'receipts-grid';
+                    receiptsContainer.id = 'receipts-container';
+                    receiptListEl.innerHTML = '';
+                    receiptListEl.appendChild(receiptsContainer);
+                } else {
+                    receiptsContainer.innerHTML = ''; // Clear existing content
+                }
+                
+                // Add receipt cards
+                receipts.forEach(receipt => {
+                    console.log('Processing receipt:', receipt);
+                    
+                    const receiptCard = document.createElement('div');
+                    receiptCard.className = 'receipt-card';
+                    receiptCard.setAttribute('data-receipt-id', receipt.id || '');
+                    receiptCard.setAttribute('data-receipt-data', JSON.stringify(receipt).replace(/'/g, '&#39;'));
+                    
+                    // Calculate total amount
+                    let totalAmount = 0;
+                    try {
+                        const products = typeof receipt.products === 'string' ? 
+                            JSON.parse(receipt.products) : (receipt.products || []);
+                        totalAmount = products.reduce((sum, p) => {
+                            return sum + (Number(p.price || 0) * Number(p.quantity || 1));
+                        }, 0);
+                    } catch (e) {
+                        console.error('Error calculating total:', e);
+                        totalAmount = receipt.amount || 0;
+                    }
+                    
+                    const receiptDate = receipt.date ? new Date(receipt.date) : new Date();
+                    const formattedDate = receiptDate.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                    
+                    // Create card content
+                    receiptCard.innerHTML = `
+                        <div class="receipt-header">
+                            <span class="receipt-title">${receipt.customer_name || 'Receipt'}</span>
+                            <span class="receipt-amount">₹${Number(totalAmount || 0).toFixed(2)}</span>
+                        </div>
+                        <div class="receipt-details">
+                            <div class="receipt-detail">
+                                <span>Date</span>
+                                <span>${formattedDate}</span>
+                            </div>
+                            <div class="receipt-detail">
+                                <span>Payment</span>
+                                <span>${receipt.payment_method || 'Not specified'}</span>
+                            </div>
+                            ${receipt.warranty || receipt.warranty_months ? `
+                            <div class="receipt-detail">
+                                <span>Status</span>
+                                <span class="warranty-badge">
+                                    <span class="material-icons">verified</span>
+                                    ${receipt.warranty || receipt.warranty_months} months warranty
+                                </span>
+                            </div>` : ''}
+                        </div>
+                        <div class="receipt-actions">
+                            <button class="btn btn-outline view-receipt" data-receipt-id="${receipt.id || ''}">
+                                <span class="material-icons">visibility</span>
+                                View
+                            </button>
+                            <button class="btn btn-primary download-receipt" data-receipt-id="${receipt.id || ''}">
+                                <span class="material-icons">download</span>
+                                Download
+                            </button>
+                        </div>
+                    `;
+                    
+                    receiptsContainer.appendChild(receiptCard);
+                });
+                
+                // If no receipts, show empty state
+                if (receipts.length === 0) {
+                    const emptyState = document.createElement('div');
+                    emptyState.className = 'empty-state';
+                    emptyState.innerHTML = `
+                        <p>No receipts found</p>
+                        <p>Add your first receipt to get started</p>
+                    `;
+                    receiptsContainer.appendChild(emptyState);
+                }
+
+                receiptListEl.appendChild(receiptsContainer);
+
+            } catch (error) {
+                console.error('Error loading receipts:', error);
+                receiptListEl.innerHTML = `
+                    <div class="empty-state">
+                        <p>Error loading receipts</p>
+                        <p style="font-size: 14px; margin-top: 8px;">Please try again later</p>
+                    </div>`;
+            }
+        }
+
+
+        // Function to generate PDF from receipt data
+        // viewMode: if true, opens PDF in a new tab; if false, downloads it
+        async function generateReceiptPdf(receipt, viewMode = false) {
+            try {
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({
+                    orientation: 'portrait',
+                    unit: 'mm',
+                    format: [80, 297] // Standard receipt width (80mm) and long length
+                });
+
+                // Set default font
+                doc.setFont('helvetica');
+                doc.setFontSize(10);
+                
+                // Shop header
+                doc.setFontSize(16);
+                doc.setFont(undefined, 'bold');
+                doc.text('MY SHOP', 40, 10, { align: 'center' });
+                
+                doc.setFontSize(10);
+                doc.setFont(undefined, 'normal');
+                doc.text('123 Shop Street, City', 40, 15, { align: 'center' });
+                doc.text('Phone: +91 1234567890', 40, 19, { align: 'center' });
+                
+                // Divider line
+                doc.setDrawColor(200, 200, 200);
+                doc.line(5, 25, 75, 25);
+                
+                // Receipt info
+                doc.setFont(undefined, 'bold');
+                doc.text('RECEIPT', 40, 32, { align: 'center' });
+                doc.setFont(undefined, 'normal');
+                
+                let y = 38;
+                
+                // Receipt number and date
+                doc.text(`Receipt #: ${receipt.id || 'N/A'}`, 5, y);
+                doc.text(`Date: ${new Date(receipt.date || Date.now()).toLocaleString('en-IN', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                })}`, 5, y + 5);
+                
+                // Customer info
+                y += 15;
+                doc.setFont(undefined, 'bold');
+                doc.text('Customer:', 5, y);
+                doc.setFont(undefined, 'normal');
+                doc.text(receipt.customer_name || 'Walk-in Customer', 25, y);
+                
+                // Divider line
+                y += 7;
+                doc.line(5, y, 75, y);
+                
+                // Table header
+                y += 5;
+                doc.setFont(undefined, 'bold');
+                doc.text('ITEM', 5, y);
+                doc.text('PRICE', 65, y, { align: 'right' });
+                
+                // Divider line
+                y += 4;
+                doc.setDrawColor(200, 200, 200);
+                doc.line(5, y, 75, y);
+                y += 5;
+                
+                // Items list
+                doc.setFont(undefined, 'normal');
+                
+                try {
+                    const products = typeof receipt.products === 'string' ? 
+                        JSON.parse(receipt.products) : (receipt.products || []);
+                    
+                    let subtotal = 0;
+                    
+                    products.forEach((p, index) => {
+                        const price = Number(p.price || 0);
+                        const qty = Number(p.quantity || 1);
+                        const total = price * qty;
+                        subtotal += total;
+                        
+                        // Item name (with word wrap)
+                        const itemName = p.name || 'Item ' + (index + 1);
+                        const splitName = doc.splitTextToSize(itemName, 50); // Increased width for item name
+                        
+                        // Format display text with quantity if not 1
+                        let displayText;
+                        if (qty === 1) {
+                            displayText = itemName;  // No quantity shown for 1
+                        } else if (Number.isInteger(qty)) {
+                            displayText = `${qty} ${itemName}`;  // Whole number quantity
+                        } else {
+                            displayText = `${qty.toFixed(2)} ${itemName}`;  // Decimal quantity
+                        }
+                        const splitDisplay = doc.splitTextToSize(displayText, 50);
+                        
+                        doc.text(splitDisplay, 5, y);
+                        doc.text('₹' + total.toFixed(2), 65, y, { align: 'right' });
+                        
+                        // Move y position based on number of lines in item name
+                        y += 5 * (splitDisplay.length > 1 ? splitDisplay.length : 1);
+                        
+                        // Add space between items
+                        y += 2;
+                    });
+                    
+                    // Divider line
+                    doc.line(5, y, 75, y);
+                    y += 5;
+                    
+                    // Total
+                    doc.line(5, y, 75, y);
+                    y += 7;
+                    doc.setFont(undefined, 'bold');
+                    doc.text('TOTAL:', 5, y);
+                    doc.text('₹' + subtotal.toFixed(2), 65, y, { align: 'right' });
+                    
+                    // Payment method
+                    y += 10;
+                    doc.setFont(undefined, 'normal');
+                    doc.text(`Payment: ${receipt.payment_method || 'Cash'}`, 5, y);
+                    
+                    // Thank you message
+                    y += 10;
+                    doc.setFontSize(9);
+                    doc.setFont(undefined, 'bold');
+                    doc.text('Thank you for your business!', 40, y, { align: 'center' });
+                    y += 5;
+                    doc.setFont(undefined, 'normal');
+                    doc.text('For any queries, contact:', 40, y, { align: 'center' });
+                    y += 5;
+                    doc.setFont(undefined, 'bold');
+                    doc.text('+91 1234567890', 40, y, { align: 'center' });
+                    
+                    // Shop info
+                    y += 10;
+                    doc.setFontSize(7);
+                    doc.setFont(undefined, 'normal');
+                    doc.text('GSTIN: 22AAAAA0000A1Z5', 40, y, { align: 'center' });
+                    y += 3;
+                    doc.text('FSSAI: 12345678901234', 40, y, { align: 'center' });
+                    
+                    // Return policy
+                    y += 7;
+                    doc.text('Goods once sold are not returnable', 40, y, { align: 'center' });
+                    y += 3;
+                    doc.text('Bills once paid cannot be cancelled', 40, y, { align: 'center' });
+                    
+                } catch (e) {
+                    console.error('Error processing products:', e);
+                    doc.text('Error loading product details', 5, y);
+                }
+                
+                // Generate a unique filename with timestamp
+                const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+                const fileName = `Receipt-${receipt.id || timestamp}.pdf`;
+                
+                if (viewMode) {
+                    // Open PDF in a new tab for viewing
+                    const pdfBlob = doc.output('blob');
+                    const pdfUrl = URL.createObjectURL(pdfBlob);
+                    window.open(pdfUrl, '_blank');
+                } else {
+                    // Download the PDF
+                    doc.save(fileName);
+                }
+                
+            } catch (error) {
+                console.error('Error generating PDF:', error);
+                alert('Error generating PDF. Please try again.');
+            }
+        }
+        
+        // Handle receipt preview and download
+        function setupReceiptActions() {
+            // Handle view receipt
+            document.querySelectorAll('.view-receipt').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const receiptId = btn.getAttribute('data-receipt-id');
+                    if (!receiptId) return;
+
+                    try {
+                        // Get the receipt data from the card's data attribute
+                        const card = btn.closest('.receipt-card');
+                        const receiptData = card ? JSON.parse(card.getAttribute('data-receipt-data').replace(/&#39;/g, "'")) : null;
+                        
+                        if (receiptData) {
+                            // Generate the PDF using the same function as download
+                            const { jsPDF } = window.jspdf;
+                            const doc = new jsPDF({
+                                orientation: 'portrait',
+                                unit: 'mm',
+                                format: [80, 297]
+                            });
+                            
+                            // Call the same PDF generation logic as the download button but in view mode
+                            await generateReceiptPdf(receiptData, true); // Pass true to indicate view mode
+                        } else {
+                            alert('Receipt data not found');
+                        }
+                    } catch (error) {
+                        console.error('Error viewing receipt:', error);
+                        alert('Error viewing receipt. Please try again.');
+                    }
+                });
+            });
+
+            // Handle download receipt
+            document.querySelectorAll('.download-receipt').forEach(btn => {
+                btn.addEventListener('click', async (e) => {
+                    e.stopPropagation();
+                    const receiptId = btn.getAttribute('data-receipt-id');
+                    if (!receiptId) return;
+
+                    try {
+                        // Get the receipt data from the card's data attribute
+                        const card = btn.closest('.receipt-card');
+                        const receiptData = card ? JSON.parse(card.getAttribute('data-receipt-data').replace(/&#39;/g, "'")) : null;
+                        
+                        if (receiptData) {
+                            // Call the generateReceiptPdf function to create and download the PDF
+                            await generateReceiptPdf(receiptData);
+                        } else {
+                            alert('Receipt data not found');
+                        }
+                    } catch (error) {
+                        console.error('Error downloading receipt:', error);
+                        alert('Error downloading receipt. Please try again.');
+                    }
+                });
+            });
+
+            // Handle receipt card click (opens the view)
+            document.querySelectorAll('.receipt-card').forEach(card => {
+                // Make receipt cards clickable
+                card.style.cursor = 'pointer';
+                
+                card.addEventListener('click', (e) => {
+                    // Only trigger if the click wasn't on a button inside the card
+                    if (!e.target.closest('button')) {
+                        const viewBtn = card.querySelector('.view-receipt');
+                        if (viewBtn) viewBtn.click();
+                    }
+                });
+            });
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadReceipts();
+            
+            // Add receipt button click handler
+            document.getElementById('fab-add-receipt').addEventListener('click', () => {
+                // Open the add receipt modal (you can implement this)
+                console.log('Add receipt clicked');
+                // Example: window.location.href = 'add-receipt.html';
+            });
+            
+            // Setup receipt actions after loading receipts
+            const observer = new MutationObserver(() => {
+                if (document.querySelector('.receipt-card')) {
+                    setupReceiptActions();
+                    observer.disconnect();
+                }
+            });
+            
+            // Start observing the receipts container for changes
+            observer.observe(document.getElementById('receipts-list'), {
+                childList: true,
+                subtree: true
+            });
+        });
+    </script>
+</body>
+</html>

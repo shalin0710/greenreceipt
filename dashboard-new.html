@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Receipt Tracker - Dashboard</title>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    
+    <!-- Material Icons -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons+Round" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="css/styles.css">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- PDF.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.11.338/pdf.min.js"></script>
+    
+    <!-- Tesseract.js for OCR -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.1.1/dist/tesseract.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar (Visible on desktop) -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h2>Receipt Tracker</h2>
+                <div class="user-info">
+                    <span class="user-name" id="sidebar-username">Loading...</span>
+                    <span class="user-email" id="sidebar-email">user@example.com</span>
+                </div>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <a href="#" class="nav-item active" data-view="dashboard">
+                    <span class="material-icons">dashboard</span>
+                    <span>Dashboard</span>
+                </a>
+                <a href="#" class="nav-item" data-view="receipts">
+                    <span class="material-icons">receipt</span>
+                    <span>My Receipts</span>
+                </a>
+                <a href="#" class="nav-item" data-view="budgets">
+                    <span class="material-icons">account_balance_wallet</span>
+                    <span>Budgets</span>
+                </a>
+                <a href="#" class="nav-item" data-view="categories">
+                    <span class="material-icons">category</span>
+                    <span>Categories</span>
+                </a>
+                <a href="#" class="nav-item" data-view="insights">
+                    <span class="material-icons">insights</span>
+                    <span>Insights</span>
+                </a>
+                <a href="#" class="nav-item" data-view="warranties">
+                    <span class="material-icons">verified_user</span>
+                    <span>Warranties</span>
+                </a>
+                <a href="#" class="nav-item" data-view="settings">
+                    <span class="material-icons">settings</span>
+                    <span>Settings</span>
+                </a>
+            </nav>
+            
+            <div class="sidebar-footer">
+                <button id="logout-btn" class="btn btn-secondary">
+                    <span class="material-icons">logout</span>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Dashboard View -->
+            <div id="dashboard-view" class="view">
+                <div class="dashboard-header">
+                    <h1>Welcome back, <span id="username">User</span>!</h1>
+                    <p>Here's what's happening with your receipts</p>
+                </div>
+                
+                <!-- Quick Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #e3f2fd;">
+                            <span class="material-icons" style="color: #1976d2;">receipt</span>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Receipts</h3>
+                            <p id="total-receipts">0</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #e8f5e9;">
+                            <span class="material-icons" style="color: #2e7d32;">savings</span>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Spent</h3>
+                            <p id="total-spent">$0.00</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #fff8e1;">
+                            <span class="material-icons" style="color: #ff8f00;">warning</span>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Expiring Soon</h3>
+                            <p id="expiring-soon">0 items</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon" style="background: #f3e5f5;">
+                            <span class="material-icons" style="color: #8e24aa;">category</span>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Categories</h3>
+                            <p id="total-categories">0</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Recent Activity -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Recent Activity</h2>
+                        <button class="btn btn-sm" id="view-all-receipts">View All</button>
+                    </div>
+                    <div id="recent-activity">
+                        <!-- Filled by JavaScript -->
+                        <div class="empty-state">
+                            <span class="material-icons">receipt</span>
+                            <p>No recent activity</p>
+                            <button class="btn" id="add-first-receipt">
+                                <span class="material-icons">add</span>
+                                Add Your First Receipt
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Quick Actions -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Quick Actions</h2>
+                    </div>
+                    <div class="quick-actions">
+                        <button class="action-btn" data-action="add-receipt">
+                            <span class="material-icons">receipt</span>
+                            Add Receipt
+                        </button>
+                        <button class="action-btn" data-action="scan-receipt">
+                            <span class="material-icons">document_scanner</span>
+                            Scan Receipt
+                        </button>
+                        <button class="action-btn" data-action="add-budget">
+                            <span class="material-icons">account_balance_wallet</span>
+                            Set Budget
+                        </button>
+                        <button class="action-btn" data-action="add-category">
+                            <span class="material-icons">category</span>
+                            Add Category
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Expiring Warranties -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Expiring Warranties</h2>
+                        <button class="btn btn-sm btn-secondary" id="view-all-warranties">View All</button>
+                    </div>
+                    <div id="expiring-warranties">
+                        <!-- Filled by JavaScript -->
+                        <div class="empty-state">
+                            <span class="material-icons">verified_user</span>
+                            <p>No warranties expiring soon</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Spending by Category -->
+                <div class="card">
+                    <div class="card-header">
+                        <h2>Spending by Category</h2>
+                        <div class="time-filter">
+                            <button class="btn-filter active">Month</button>
+                            <button class="btn-filter">Year</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="category-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Other views will be loaded here -->
+            <div id="receipts-view" class="view" style="display: none;">
+                <!-- Receipts view content will be loaded here -->
+            </div>
+            
+            <div id="budgets-view" class="view" style="display: none;">
+                <!-- Budgets view content will be loaded here -->
+            </div>
+            
+            <div id="categories-view" class="view" style="display: none;">
+                <!-- Categories view content will be loaded here -->
+            </div>
+            
+            <div id="insights-view" class="view" style="display: none;">
+                <!-- Insights view content will be loaded here -->
+            </div>
+            
+            <div id="warranties-view" class="view" style="display: none;">
+                <!-- Warranties view content will be loaded here -->
+            </div>
+            
+            <div id="settings-view" class="view" style="display: none;">
+                <!-- Settings view content will be loaded here -->
+            </div>
+        </main>
+    </div>
+    
+    <!-- Bottom Navigation (Mobile Only) -->
+    <nav class="bottom-nav">
+        <a href="#" class="nav-item active" data-view="dashboard">
+            <span class="material-icons">dashboard</span>
+            <span>Dashboard</span>
+        </a>
+        <a href="#" class="nav-item" data-view="receipts">
+            <span class="material-icons">receipt</span>
+            <span>Receipts</span>
+        </a>
+        <a href="#" class="nav-item" data-view="scan">
+            <span class="material-icons">add_a_photo</span>
+            <span>Scan</span>
+        </a>
+        <a href="#" class="nav-item" data-view="budgets">
+            <span class="material-icons">account_balance_wallet</span>
+            <span>Budgets</span>
+        </a>
+        <a href="#" class="nav-item" data-view="more">
+            <span class="material-icons">menu</span>
+            <span>More</span>
+        </a>
+    </nav>
+    
+    <!-- Add Receipt Modal -->
+    <div id="add-receipt-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Receipt</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <form id="add-receipt-form">
+                <div class="form-group">
+                    <label for="receipt-title">Title</label>
+                    <input type="text" id="receipt-title" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="receipt-amount">Amount</label>
+                    <input type="number" id="receipt-amount" class="form-control" step="0.01" min="0" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="receipt-store">Store</label>
+                    <input type="text" id="receipt-store" class="form-control">
+                </div>
+                
+                <div class="form-group">
+                    <label for="receipt-date">Date</label>
+                    <input type="date" id="receipt-date" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="receipt-category">Category</label>
+                    <select id="receipt-category" class="form-control" required>
+                        <option value="">Select a category</option>
+                        <!-- Filled by JavaScript -->
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="receipt-warranty">Warranty (months)</label>
+                    <input type="number" id="receipt-warranty" class="form-control" min="0">
+                </div>
+                
+                <div class="form-group">
+                    <label for="receipt-image">Receipt Image</label>
+                    <div class="file-upload">
+                        <input type="file" id="receipt-image" accept="image/*,application/pdf" capture="environment">
+                        <label for="receipt-image" class="btn btn-secondary">
+                            <span class="material-icons">upload</span>
+                            Upload Image
+                        </label>
+                        <span id="file-name">No file chosen</span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="receipt-notes">Notes</label>
+                    <textarea id="receipt-notes" class="form-control" rows="3"></textarea>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-receipt">Cancel</button>
+                    <button type="submit" class="btn">Save Receipt</button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Scan Receipt Modal -->
+    <div id="scan-receipt-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Scan Receipt</h2>
+                <button class="close-modal">&times;</button>
+            </div>
+            <div class="scan-container">
+                <div id="camera-preview">
+                    <video id="camera" autoplay playsinline style="width: 100%; border-radius: 8px;"></video>
+                    <canvas id="scan-canvas" style="display: none;"></canvas>
+                </div>
+                <div id="scan-instructions">
+                    <p>Position the receipt within the frame and ensure all text is visible and clear.</p>
+                </div>
+                <div class="scan-actions">
+                    <button id="capture-btn" class="btn">
+                        <span class="material-icons">camera_alt</span>
+                        Capture
+                    </button>
+                    <button id="retake-btn" class="btn btn-secondary" style="display: none;">
+                        <span class="material-icons">replay</span>
+                        Retake
+                    </button>
+                    <button id="process-btn" class="btn" style="display: none;">
+                        <span class="material-icons">done</span>
+                        Process
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notifications -->
+    <div id="toast-container"></div>
+    
+    <!-- Scripts -->
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Our Scripts -->
+    <script src="js/database.js"></script>
+    <script src="js/app.js"></script>
+    
+    <script>
+        // Initialize the app when the DOM is fully loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set current date as default for receipt date
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('receipt-date').value = today;
+            
+            // Initialize the app
+            if (window.app) {
+                window.app.initializeApp();
+            }
+        });
+    </script>
+</body>
+</html>

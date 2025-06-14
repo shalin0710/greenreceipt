@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <form class="card" id="signupForm">
+            <h2>Sign up</h2>
+            <div class="input-group">
+                <span class="icon material-icons">person</span>
+                <input type="text" placeholder="Username" required>
+            </div>
+            <div class="input-group">
+                <span class="icon material-icons">call</span>
+                <input type="tel" placeholder="Phone" required>
+            </div>
+            <div class="input-group">
+                <span class="icon material-icons">email</span>
+                <input type="email" placeholder="Email" required>
+            </div>
+            <div class="input-group">
+                <span class="icon material-icons">lock</span>
+                <input type="password" placeholder="Password" required>
+            </div>
+            <div class="input-group">
+                <span class="icon material-icons">lock</span>
+                <input type="password" placeholder="Confirm Password" required>
+            </div>
+            <button type="submit" class="btn">Create account</button>
+            <div class="divider">or</div>
+            <button type="button" class="btn google">Sign up / Login with Google</button>
+            <p class="switch">Already have an account? <a href="login.html">Login</a></p>
+        </form>
+    </div>
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="script.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</body>
+</html>

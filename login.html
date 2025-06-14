@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <form class="card" id="loginForm">
+            <h2>Login</h2>
+            <div class="input-group">
+                <span class="icon material-icons">email</span>
+                <input type="email" placeholder="Email" required>
+            </div>
+            <div class="input-group">
+                <span class="icon material-icons">lock</span>
+                <input type="password" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn">Login</button>
+            <div class="divider">or</div>
+            <button type="button" class="btn google">Sign up / Login with Google</button>
+            <p class="switch">Don't have an account? <a href="index.html">Sign up</a></p>
+        </form>
+    </div>
+    <!-- Supabase JS CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+    <script src="script.js"></script>
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+</body>
+</html>

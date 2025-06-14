@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Profile - Receipts App</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2e7d32; /* Green color */
+            --secondary-color: #6c757d;
+            --background: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-primary: #212529;
+            --text-secondary: #6c757d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        /* Mobile-first approach */
+        .container {
+            max-width: 100%;
+            width: 100%;
+            margin: 0 auto;
+            padding: 15px;
+            padding-bottom: 80px; /* Add padding to prevent content from being hidden behind the bottom nav */
+            box-sizing: border-box;
+        }
+        
+        /* Desktop styles */
+        @media (min-width: 768px) {
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: flex-start;
+                min-height: 100vh;
+                background-color: #f0f2f5;
+            }
+            
+            .container {
+                max-width: 480px; /* Fixed width for mobile-like appearance */
+                background: white;
+                min-height: 100vh;
+                box-shadow: 0 0 10px rgba(0,0,0,0.1);
+                position: relative;
+                overflow-x: hidden;
+            }
+        }
+
+        .profile-header {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            margin-bottom: 25px;
+            background: var(--card-bg);
+            padding: 20px 15px;
+            border-radius: 15px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        @media (min-width: 480px) {
+            .profile-header {
+                flex-direction: row;
+                text-align: left;
+                padding: 25px;
+            }
+        }
+
+        .profile-picture {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            object-fit: cover;
+            margin: 0 0 15px 0;
+            border: 3px solid var(--primary-color);
+        }
+        
+        @media (min-width: 480px) {
+            .profile-picture {
+                width: 120px;
+                height: 120px;
+                margin: 0 20px 0 0;
+            }
+        }
+
+        .profile-info h1 {
+            margin: 0 0 10px 0;
+            color: var(--primary-color);
+        }
+
+        .profile-info h2 {
+            margin: 0 0 5px 0;
+            color: var(--text-primary);
+        }
+
+        .profile-info p {
+            margin: 5px 0;
+            color: var(--text-secondary);
+        }
+
+        .profile-details {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+
+        .detail-card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .detail-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            padding: 12px 15px;
+            border-radius: 10px;
+            background: var(--input-bg);
+            transition: all 0.2s;
+        }
+        
+        .detail-item:hover {
+            background: #f0f0f0;
+            transform: translateX(3px);
+        }
+
+        .material-icons {
+            margin-right: 15px;
+            color: var(--primary-color);
+            font-size: 1.3em;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-top: 20px;
+            width: 100%;
+        }
+        
+        @media (min-width: 480px) {
+            .action-buttons {
+                flex-direction: row;
+            }
+        }
+
+        .btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            color: white;
+        }
+        
+        .btn-logout {
+            background-color: #dc3545;
+            color: white;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        .btn-logout:hover {
+            background-color: #c82333;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--primary-color);
+            color: var(--primary-color);
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+        }
+
+        @media (max-width: 768px) {
+            .profile-header {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .profile-picture {
+                margin: 0 0 20px 0;
+            }
+
+            .profile-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="profile-header">
+            <img id="profile-picture" src="https://ui-avatars.com/api/?name=User&background=4a6fa5&color=fff&size=200" alt="Profile Picture" class="profile-picture">
+            <div class="profile-info">
+                <h1 id="user-name">Loading...</h1>
+                <p id="user-email">Loading...</p>
+                <p id="user-phone">Loading...</p>
+                <div class="profile-actions">
+                <button id="edit-profile-btn" class="btn btn-primary">
+                    <i class="material-icons">edit</i> Edit Profile
+                </button>
+                <button id="upload-picture" class="btn btn-secondary">
+                    <i class="material-icons">camera_alt</i> Change Photo
+                </button>
+                <button id="logout-btn" class="btn btn-logout">
+                    <i class="material-icons">logout</i> Sign Out
+                </button>
+            </div>
+            </div>
+        </div>
+
+        <div class="profile-details">
+            <div class="detail-card" style="grid-column: 1 / -1;">
+                <h3>Account Information</h3>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                    <div class="info-group">
+                        <div class="detail-item">
+                            <i class="material-icons">person</i>
+                            <div>
+                                <div class="label">Full Name</div>
+                                <div id="account-username" class="value" style="font-size: 1.1em; font-weight: 500;">-</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <i class="material-icons">email</i>
+                            <div>
+                                <div class="label">Email Address</div>
+                                <div id="account-email" class="value" style="font-size: 1.1em; font-weight: 500;">-</div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <i class="material-icons">phone</i>
+                            <div>
+                                <div class="label">Phone Number</div>
+                                <div id="account-phone" class="value" style="font-size: 1.1em; font-weight: 500;">-</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-box" style="background: #f8f9fa; border-radius: 8px; padding: 20px; display: flex; flex-direction: column; justify-content: center;">
+                        <h4 style="margin-top: 0; color: var(--primary-color);">Account Status</h4>
+                        <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                            <i class="material-icons" style="color: #28a745; margin-right: 10px;">check_circle</i>
+                            <span>Email Verified</span>
+                        </div>
+                        <div style="display: flex; align-items: center;">
+                            <i class="material-icons" style="color: #28a745; margin-right: 10px;">check_circle</i>
+                            <span>Active Member</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="detail-card">
+                <h3>Membership</h3>
+                <div class="detail-item">
+                    <i class="material-icons">star</i>
+                    <div>
+                        <div class="label">Member Since</div>
+                        <div id="member-since">-</div>
+                    </div>
+                </div>
+                <div class="detail-item">
+                    <i class="material-icons">receipt</i>
+                    <div>
+                        <div class="label">Total Receipts</div>
+                        <div id="total-receipts">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <a href="dashboard.html" class="nav-item">
+            <span class="material-icons">home</span>
+            <span>Home</span>
+        </a>
+        <a href="receipts.html" class="nav-item">
+            <span class="material-icons">receipt_long</span>
+            <span>Receipts</span>
+        </a>
+        <a href="#" class="nav-item">
+            <span class="material-icons">star</span>
+            <span>Offers</span>
+        </a>
+            <a href="#" class="nav-item active" id="profile-nav-item">
+                <span class="material-icons">person</span>
+                <span id="profile-nav-name">Profile</span>
+            </a>
+    </nav>
+
+    <style>
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            background-color: #ffffff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+            padding: 8px 0;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-decoration: none;
+            color: #666;
+            padding: 8px 12px;
+            border-radius: 8px;
+            transition: all 0.2s;
+            font-size: 0.8rem;
+        }
+        
+        .nav-item.active {
+            color: #2e7d32;
+        }
+        
+        .nav-item .material-icons {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        .nav-item span {
+            font-size: 12px;
+        }
+    </style>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Check if Supabase is loaded
+        function checkSupabaseLoaded() {
+            if (!window.supabase) {
+                console.error('Supabase not loaded. Please check your internet connection.');
+                alert('Error: Could not load Supabase. Please check your internet connection and refresh the page.');
+                return false;
+            }
+            return true;
+        }
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://ygfjhicakkcctduoscdy.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InlnZmpoaWNha2tjY3RkdW9zY2R5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ5MDgzMDQsImV4cCI6MjA2MDQ4NDMwNH0.pjDlkmoNMpJGxf7viom2hNgWTVEUUz7yYWgMUAaCx8c';
+        
+        // Initialize Supabase client immediately
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('Supabase client initialized');
+        
+        // Make it globally available
+        window.supabaseClient = supabase;
+        
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', async function() {
+            try {
+                if (!checkSupabaseLoaded()) {
+                    console.error('Supabase not available');
+                    return;
+                }
+                
+                // Load the profile
+                await loadProfile();
+                
+            } catch (error) {
+                console.error('Initialization error:', error);
+                alert('Error initializing the application. Please check the console for details.');
+            }
+        });
+
+        // DOM Elements
+        const profilePicture = document.getElementById('profile-picture');
+        const userName = document.getElementById('user-name');
+        const userEmail = document.getElementById('user-email');
+        const userPhone = document.getElementById('user-phone');
+        const accountUsername = document.getElementById('account-username');
+        const accountEmail = document.getElementById('account-email');
+        const accountPhone = document.getElementById('account-phone');
+        const memberSince = document.getElementById('member-since');
+        const totalReceipts = document.getElementById('total-receipts');
+        const uploadPictureBtn = document.getElementById('upload-picture');
+        const editProfileBtn = document.getElementById('edit-profile');
+
+        // Load user profile
+        async function loadProfile() {
+            try {
+                console.log('Checking authentication status...');
+                
+                // Get current user
+                const { data: { user }, error: userError } = await window.supabaseClient.auth.getUser();
+                console.log('User auth response:', { user, userError });
+                
+                if (userError) {
+                    console.error('Authentication error:', userError);
+                    throw userError;
+                }
+                
+                if (!user) {
+                    console.log('No user found, redirecting to login...');
+                    window.location.href = 'index.html';
+                    return;
+                }
+
+                // Get profile data
+                console.log('Fetching profile for user ID:', user.id);
+                const { data: profile, error: profileError } = await window.supabaseClient
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single();
+
+                console.log('Profile data response:', { profile, profileError });
+
+                if (profileError) {
+                    console.error('Error fetching profile:', profileError);
+                    throw profileError;
+                }
+                
+                if (!profile) {
+                    throw new Error('No profile data found');
+                }
+
+                // Update UI with profile data
+                const displayName = profile.username || 'User';
+                const userEmailText = user.email || 'No email provided';
+                const userPhoneText = profile.phone || 'Not provided';
+
+                // Update profile picture with fallback
+                if (profile.avatar_url) {
+                    profilePicture.src = profile.avatar_url;
+                } else {
+                    // Fallback to initials avatar if no profile picture
+                    profilePicture.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(displayName)}&background=4a6fa5&color=fff&size=200`;
+                }
+
+                // Update header section
+                userName.textContent = displayName;
+                userEmail.textContent = userEmailText;
+                userPhone.textContent = userPhoneText;
+
+                // Update account information section
+                accountUsername.textContent = displayName;
+                accountEmail.textContent = userEmailText;
+                accountPhone.textContent = userPhoneText;
+
+                // Format and set member since date
+                const createdAt = new Date(user.created_at);
+                memberSince.textContent = createdAt.toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+
+                // Get receipt stats
+                const { count, error: countError } = await window.supabaseClient
+                    .from('receipts')
+                    .select('*', { count: 'exact', head: true })
+                    .eq('user_id', user.id);
+
+                if (countError) {
+                    console.error('Error fetching receipt count:', countError);
+                } else {
+                    const totalReceipts = document.getElementById('total-receipts');
+                    if (totalReceipts) {
+                        totalReceipts.textContent = count || 0;
+                    }
+                }
+
+            } catch (error) {
+                console.error('Error in loadProfile:', error);
+                // Show error message to user
+                const errorMessage = error.message || 'Error loading profile. Please try again.';
+                alert(errorMessage);
+                
+                // Optionally show error in UI
+                const errorContainer = document.createElement('div');
+                errorContainer.style.color = 'red';
+                errorContainer.style.padding = '10px';
+                errorContainer.style.margin = '10px 0';
+                errorContainer.style.border = '1px solid #ffcccc';
+                errorContainer.style.borderRadius = '4px';
+                errorContainer.textContent = `Error: ${errorMessage}`;
+                document.querySelector('.container').prepend(errorContainer);
+            }
+        }
+
+
+        // Event Listeners
+        function setupEventListeners() {
+            const uploadBtn = document.getElementById('upload-picture');
+            const editBtn = document.getElementById('edit-profile-btn');
+            
+            if (uploadBtn) {
+                uploadBtn.addEventListener('click', () => {
+                    // This is a placeholder for file upload functionality
+                    alert('Profile picture upload functionality will be implemented here.');
+                    // You can integrate with Supabase Storage here
+                });
+            }
+            
+            if (editBtn) {
+                editBtn.addEventListener('click', () => {
+                    // This is a placeholder for edit profile functionality
+                    alert('Edit profile functionality will be implemented here.');
+                    // You can implement a form to edit profile details
+                });
+            }
+        }
+
+        // Logout button functionality
+        async function handleLogout() {
+            console.log('Logout initiated');
+            try {
+                // Use the global supabase client
+                if (!window.supabaseClient) {
+                    throw new Error('Supabase client not available');
+                }
+                
+                console.log('Attempting to sign out...');
+                const { error } = await window.supabaseClient.auth.signOut();
+                
+                if (error) {
+                    console.error('Sign out error:', error);
+                    throw error;
+                }
+                
+                console.log('Successfully signed out, redirecting to login...');
+                // Redirect to login page after successful logout
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Error in handleLogout:', error);
+                alert('Error signing out. Please try again or refresh the page.');
+            }
+        }
+        
+        function setupLogoutButton() {
+            const logoutBtn = document.getElementById('logout-btn');
+            if (logoutBtn) {
+                // Remove any existing event listeners
+                const newLogoutBtn = logoutBtn.cloneNode(true);
+                logoutBtn.parentNode.replaceChild(newLogoutBtn, logoutBtn);
+                
+                // Add new click handler
+                newLogoutBtn.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    console.log('Logout button clicked');
+                    handleLogout();
+                });
+                
+                // Also handle form submission if it's inside a form
+                const form = newLogoutBtn.closest('form');
+                if (form) {
+                    form.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        handleLogout();
+                    });
+                }
+            }
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', async () => {
+            try {
+                console.log('DOM fully loaded, initializing...');
+                
+                // Initialize event listeners
+                setupEventListeners();
+                setupLogoutButton();
+                
+                // Load profile data
+                await loadProfile();
+                
+                console.log('Page initialization complete');
+            } catch (error) {
+                console.error('Error during page initialization:', error);
+                alert('An error occurred while initializing the page. Please refresh and try again.');
+            }
+        });
+    </script>
+</body>
+</html>
